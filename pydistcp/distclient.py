@@ -125,15 +125,15 @@ class WebHDFSDistClient(object):
           _src_path_checksum = self.src.checksum(_src_path)
           _dst_path_checksum = self.dst.checksum(_dst_path)
           if _src_path_checksum['algorithm'] != _dst_path_checksum['algorithm']:
-            _logger.debug('source and destination files does not seems to have the same block size or crc chunk size.', _src_path, _dst_path)
+            _logger.debug('source and destination files does not seems to have the same block size or crc chunk size.')
           elif _src_path_checksum['bytes'] != _dst_path_checksum['bytes']:
-            _logger.debug('source destination files does not seems to have the same checksum value.', _src_path, _dst_path)
+            _logger.debug('source destination files does not seems to have the same checksum value.')
           else:
             _logger.debug('source %r and destination %r seems to be identical, skipping.', _src_path, _dst_path)
             skip=True
         else:
-          _logger.debug('no checksum check will be performed, forcing file copy.', _src_path, _dst_path)
-          skip=True
+          _logger.debug('no checksum check will be performed, forcing file copy source %r to destination %r.', _src_path, _dst_path)
+          #skip=True
 
       if not skip:
         # Prevent race condition when creating directories

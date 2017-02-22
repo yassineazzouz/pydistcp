@@ -51,13 +51,12 @@ class _Progress(object):
         self._writer.write('%79s\r' % ('', ))
 
   @classmethod
-  def from_hdfs_pattern(cls, client, hdfs_path, writer=None):
+  def get_instance(cls, client, hdfs_path, writer=None):
     """Instantiate from remote path.
-
     :param client: HDFS client.
     :param hdfs_path: HDFS path.
-
     """
+
     total_content={'length': 0, 'fileCount': 0}
     matches = [ upload_file for upload_file in hglob.glob(client, hdfs_path) ]
     for file_match in matches:
