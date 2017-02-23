@@ -114,10 +114,20 @@ Below some benchmarks showing the impact of data size on the copy performance us
 |     242    |  25.9 G   |  5m39.348s |
 |     869    |  116.9 G  |  25m53.231s |
 |     42     |  545.8 M  |  0m19.946s |
+|     1788   |  5.2 G    |  2m25.649s |
+|    4428    |  35.7 G   |  10m20.129s |
+|    2357    |  5.6 G    |  3m2.598s   |
+|    180     |  2.3 G    |  0m33.133s  |
+|    334     |  7.6 G    |  1m26.260s  |
 
 Note that all test cases are executed with 10 concurent threads on a machine having 6 cores and supporting up to 12 threads and no files
 are skipped during the copy. Both the source and destination clusters are secured with kerberos and use ssl to encrypt transferred data.
 
+Pydistcp performance may be impact by lot of parameters like:
+- the size of the machine performing the copy.
+- The type of the source and destination clusters (secure clusters with kerberos does not support lot of concurrent threads, it is better from a performance perspective to use token authentication)
+- SSL and the length of encyption key used
+- The type of data to be transfered : Pydistcp deliver the best performance for multiple files having approximatily uniform sizes. 
 
 Contributing
 ------------
