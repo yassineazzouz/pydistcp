@@ -1,3 +1,5 @@
+[![pypi](https://badge.fury.io/py/pydistcp.svg)](https://badge.fury.io/py/pydistcp)
+
 pydistcp
 ==================================
 
