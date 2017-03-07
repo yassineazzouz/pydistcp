@@ -3,7 +3,7 @@
 pydistcp
 ==================================
 
-A python WebHDFS/HTTPFS based tool for inter/intra-cluster data copying. This tool is very suitable for multiple mid or small size files cross-clusters copy. Compared to the normal distcp which adds a lot of overhead time for subtimitting the map-reduce job then waiting for YARN to schedule it...,  pydistcp uses webhdfs to stream the data from source cluster datanodes directly to destination cluster datanodes using multiple parallel threads. 
+A python WebHDFS/HTTPFS based tool for inter/intra-cluster data copying. This tool is very suitable for multiple mid or small size files cross-clusters copy. Compared to the normal distcp which adds a lot of overhead time for submitting the map-reduce job then waiting for YARN to schedule it...,  pydistcp uses webhdfs to stream the data from source cluster datanodes directly to destination cluster datanodes using multiple parallel threads. 
 
 When transferring few huge files, the normal distcp may be faster, but when transferring lot of small, midsize or relatively big file,  pydistcp provides a very good performance.
 
@@ -46,9 +46,9 @@ Features
    - Supports HDFS federation with multiple nameservices and mount points.
 * Supports data copy between secure and insecure clusters
 * Supports data copy between clusters using different kerberos realms using token authentication
-* Supports data copy between encrypted and non encrypted clusters
+* Supports data copy between encrypted and unencrypted clusters
 * Json format clusters configuration.
-* Perform concurent multithreaded data copy.
+* Perform concurrent multithreaded data copy.
 
 
 Getting started
@@ -68,7 +68,7 @@ Please refer to the project readme file for details about the json configuration
 USAGE
 -------
 
-There are multiple arguments you can use to alter the way the copy works, or to inhence the performace of the job depending on the size of the server you use.
+There are multiple arguments you can use to alter the way the copy works, or to enhance the performance of the job depending on the size of the server you use.
 Use the help argument to display the full list of supported parameters:
 
 ```bash
@@ -90,7 +90,7 @@ Use the help argument to display the full list of supported parameters:
     -f --force                    Allow overwriting any existing files.
     -p --preserve                 Preserve file attributes.
     --threads=THREADS             Number of threads to use for parallelization.
-                                  zero limits the concurency to the maximim concurrent threads
+                                  zero limits the concurrency to the maximum concurrent threads
                                   supported by the cluster. [default: 0]
     --part-size=PART_SIZE         Interval in bytes by which the files will be copied
                                   needs to be a Powers of 2. [default: 65536]
@@ -120,14 +120,14 @@ Below some benchmarks showing the impact of data size on the copy performance us
 |    180     |  2.3 G    |  0m33.133s  |
 |    334     |  7.6 G    |  1m26.260s  |
 
-Note that all test cases are executed with 10 concurent threads on a machine having 6 cores and supporting up to 12 threads and no files
+Note that all test cases are executed with 10 concurrent threads on a machine having 6 cores and supporting up to 12 threads and no files
 are skipped during the copy. Both the source and destination clusters are secured with kerberos and use ssl to encrypt transferred data.
 
 Pydistcp performance may be impact by lot of parameters like:
 - the size of the machine performing the copy.
 - The type of the source and destination clusters (secure clusters with kerberos does not support lot of concurrent threads, it is better from a performance perspective to use token authentication)
-- SSL and the length of encyption key used
-- The type of data to be transfered : Pydistcp deliver the best performance for multiple files having approximatily uniform sizes. 
+- SSL and the length of encryption key used
+- The type of data to be transferred : Pydistcp deliver the best performance for multiple files having approximately uniform sizes. 
 
 Contributing
 ------------
