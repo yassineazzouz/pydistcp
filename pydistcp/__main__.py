@@ -40,7 +40,7 @@ import requests as rq
 import json
 import sys
 
-def configure_client(args):
+def configure(args):
   """Instantiate configuration from arguments dictionary.
 
   :param args: Arguments returned by `docopt`.
@@ -81,10 +81,7 @@ def configure_client(args):
   # configure file logging if applicable
   handler = config.get_log_handler()
   logger.addHandler(handler)
-
-  src_client = config.get_client(args["--src"])
-  dest_client = config.get_client(args["--dest"])
-  return WebHDFSDistClient(src_client, dest_client)
+  return config
 
 def main(argv=None):
   """Entry point.
@@ -94,7 +91,7 @@ def main(argv=None):
 
   args = docopt(__doc__, argv=argv, version=__version__)
 
-  client = configure_client(args)
+  config = configure(args)
 
   n_threads = int(args['--threads'])
   part_size = int(args['--part-size'])
@@ -104,25 +101,69 @@ def main(argv=None):
   src_path = args['SRC_PATH']
   dest_path = args['DEST_PATH']
 
-  if sys.stderr.isatty() and not silent:
-    progress = _Progress.get_instance(client.src,src_path)
+  if args["--src"] != 'local' and args["--dest"] != 'local':
+    src_client = config.get_client(args["--src"])
+    dest_client = config.get_client(args["--dest"])
+    client = WebHDFSDistClient(src_client, dest_client)
+
+    if sys.stderr.isatty() and not silent:
+      progress = _Progress.from_hdfs(client.src,src_path)
+    else:
+      progress = None
+
+    status = client.copy(
+              src_path,
+              dest_path,
+              overwrite=force,
+              checksum=checksum,
+              chunk_size=part_size,
+              n_threads=n_threads,
+              progress=progress,
+              preserve= True if args['--preserve'] else False,
+            )
+
+    print "Job Status:"
+    print json.dumps(status, indent=2)
+
+  elif args["--src"] == 'local' and args["--dest"] != 'local':
+    client = config.get_client(args["--dest"])
+    if sys.stderr.isatty() and not silent:
+      progress = _Progress.from_local(src_path)
+    else:
+      progress = None
+
+    client.upload(
+      dest_path,
+      src_path,
+      overwrite=force,
+      chunk_size=part_size,
+      n_threads=n_threads,
+      progress=progress,
+      preserve= True if args['--preserve'] else False,
+    )    
+
+  elif args["--src"] != 'local' and args["--dest"] == 'local':
+    client = config.get_client(args["--src"])
+    if sys.stderr.isatty() and not silent:
+      progress = _Progress.from_hdfs(client,src_path)
+    else:
+      progress = None
+
+    client.download(
+      src_path,
+      dest_path,
+      overwrite=force,
+      chunk_size=part_size,
+      n_threads=n_threads,
+#      progress=progress,
+      preserve= True if args['--preserve'] else False,
+    )
   else:
-    progress = None
+    print('copy from local to local is not supported, use cp command.')
+    sys.exit(1)
 
-  status = client.copy(
-            src_path,
-            dest_path,
-            overwrite=force,
-            checksum=checksum,
-            chunk_size=part_size,
-            n_threads=n_threads,
-            progress=progress,
-            preserve= True if args['--preserve'] else False,
-          )
-
-  print "Job Status:"
-  print json.dumps(status, indent=2)
   sys.exit(0)
   
+
 if __name__ == '__main__':
   main()

@@ -3,6 +3,8 @@
 
 from pywhdfs.utils import hglob
 from threading import Lock
+import os.path as osp
+import os
 import sys
 
 class _Progress(object):
@@ -51,7 +53,7 @@ class _Progress(object):
         self._writer.write('%79s\r' % ('', ))
 
   @classmethod
-  def get_instance(cls, client, hdfs_path, writer=None):
+  def from_hdfs(cls, client, hdfs_path, writer=None):
     """Instantiate from remote path.
     :param client: HDFS client.
     :param hdfs_path: HDFS path.
@@ -64,3 +66,22 @@ class _Progress(object):
       total_content['length'] +=  file_content['length']
       total_content['fileCount'] +=  file_content['fileCount']
     return cls(total_content['length'], total_content['fileCount'], writer=writer)
+
+  @classmethod
+  def from_local(cls, local_path, writer=None):
+    """Instantiate from a local path.
+    :param local_path: Local path.
+    """
+    if osp.isdir(local_path):
+      nbytes = 0
+      nfiles = 0
+      for dpath, _, fnames in os.walk(local_path):
+        for fname in fnames:
+          nbytes += osp.getsize(osp.join(dpath, fname))
+          nfiles += 1
+    elif osp.exists(local_path):
+      nbytes = osp.getsize(local_path)
+      nfiles = 1
+    else:
+      raise HdfsError('No file found at: %s', local_path)
+    return cls(nbytes, nfiles, writer=writer)
