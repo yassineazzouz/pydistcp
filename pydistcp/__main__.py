@@ -155,7 +155,7 @@ def main(argv=None):
       overwrite=force,
       chunk_size=part_size,
       n_threads=n_threads,
-#      progress=progress,
+      progress=progress,
       preserve= True if args['--preserve'] else False,
     )
   else:

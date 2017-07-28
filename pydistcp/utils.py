@@ -29,7 +29,10 @@ class _Progress(object):
     widgets = ['Progress: ', Percentage(), ' ', Bar(left='[',right=']'),
                ' ', Timer(format='Time: %s'), ' ', FileTransferSpeed()]
 
-    self.pbar = ProgressBar(widgets=widgets, maxval=self._total_bytes).start()
+    if self._total_bytes > 0:
+      self.pbar = ProgressBar(widgets=widgets, maxval=self._total_bytes).start()
+    else:
+      self.pbar = ProgressBar(widgets=widgets, maxval=nfiles).start()
 
   def __call__(self, hdfs_path, nbytes):
     # TODO: Improve lock granularity.
@@ -43,10 +46,14 @@ class _Progress(object):
         self._complete_files += 1
       else:
         data[hdfs_path] = nbytes
-      self.pbar.update(sum(data.values()))
+      if self._total_bytes:
+        self.pbar.update(sum(data.values()))
+      else:
+        self.pbar.update(self._complete_files)
 
   def __del__(self):
-    self.pbar.finish()
+    if self.pbar:
+      self.pbar.finish()
 
   @classmethod
   def from_hdfs(cls, client, hdfs_path):
