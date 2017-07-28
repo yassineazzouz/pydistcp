@@ -51,6 +51,7 @@ setup(
   install_requires=[
     'docopt',
     'pywhdfs>=1.0.0',
+    'progressbar>=2.0'
   ],
   entry_points={'console_scripts': 
      [ 'pydistcp = pydistcp.__main__:main' ]

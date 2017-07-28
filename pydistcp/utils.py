@@ -3,6 +3,7 @@
 
 from pywhdfs.utils import hglob
 from threading import Lock
+from progressbar import AnimatedMarker, Bar, FileTransferSpeed, Percentage, ProgressBar, RotatingMarker, Timer
 import os.path as osp
 import os
 import sys
@@ -13,19 +14,22 @@ class _Progress(object):
 
   :param nbytes: Total number of bytes that will be transferred.
   :param nfiles: Total number of files that will be transferred.
-  :param writer: Writable file-object where the progress will be written.
     Defaults to standard error.
 
   """
 
-  def __init__(self, nbytes, nfiles, writer=None):
+  def __init__(self, nbytes, nfiles):
     self._total_bytes = nbytes
     self._pending_files = nfiles
-    self._writer = writer or sys.stderr
     self._transferring_files = 0
     self._complete_files = 0
     self._lock = Lock()
     self._data = {}
+
+    widgets = ['Progress: ', Percentage(), ' ', Bar(marker=RotatingMarker()),
+               ' ', Timer(), ' ', FileTransferSpeed()]
+
+    self.pbar = ProgressBar(widgets=widgets, maxval=self._total_bytes).start()
 
   def __call__(self, hdfs_path, nbytes):
     # TODO: Improve lock granularity.
@@ -39,21 +43,13 @@ class _Progress(object):
         self._complete_files += 1
       else:
         data[hdfs_path] = nbytes
-      if self._pending_files + self._transferring_files > 0:
-        self._writer.write(
-          '%3.1f%%\t[ pending: %d | transferring: %d | complete: %d ]   \r' %
-          (
-            100. * sum(data.values()) / self._total_bytes,
-            self._pending_files,
-            self._transferring_files,
-            self._complete_files,
-          )
-        )
-      else:
-        self._writer.write('%79s\r' % ('', ))
+      self.pbar.update(sum(data.values()))
+
+  def __del__(self):
+    self.pbar.finish()
 
   @classmethod
-  def from_hdfs(cls, client, hdfs_path, writer=None):
+  def from_hdfs(cls, client, hdfs_path):
     """Instantiate from remote path.
     :param client: HDFS client.
     :param hdfs_path: HDFS path.
@@ -65,10 +61,10 @@ class _Progress(object):
       file_content = client.content(file_match)
       total_content['length'] +=  file_content['length']
       total_content['fileCount'] +=  file_content['fileCount']
-    return cls(total_content['length'], total_content['fileCount'], writer=writer)
+    return cls(total_content['length'], total_content['fileCount'])
 
   @classmethod
-  def from_local(cls, local_path, writer=None):
+  def from_local(cls, local_path):
     """Instantiate from a local path.
     :param local_path: Local path.
     """
@@ -84,4 +80,4 @@ class _Progress(object):
       nfiles = 1
     else:
       raise HdfsError('No file found at: %s', local_path)
-    return cls(nbytes, nfiles, writer=writer)
+    return cls(nbytes, nfiles)
