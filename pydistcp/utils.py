@@ -7,6 +7,7 @@ from progressbar import AnimatedMarker, Bar, FileTransferSpeed, Percentage, Prog
 import os.path as osp
 import os
 import sys
+import glob
 
 class _Progress(object):
 
@@ -75,16 +76,21 @@ class _Progress(object):
     """Instantiate from a local path.
     :param local_path: Local path.
     """
-    if osp.isdir(local_path):
-      nbytes = 0
-      nfiles = 0
-      for dpath, _, fnames in os.walk(local_path):
-        for fname in fnames:
-          nbytes += osp.getsize(osp.join(dpath, fname))
-          nfiles += 1
-    elif osp.exists(local_path):
-      nbytes = osp.getsize(local_path)
-      nfiles = 1
-    else:
-      raise HdfsError('No file found at: %s', local_path)
+    uploads = [ upload_file for upload_file in glob.iglob(local_path) ]
+    if len(uploads) == 0:
+      raise HdfsError('Cloud not resolve source path, either it does not exist or can not access it.', local_path)
+
+    nbytes = 0
+    nfiles = 0
+    for upload in uploads:
+      if osp.isdir(upload):
+        for dpath, _, fnames in os.walk(upload):
+          for fname in fnames:
+            nbytes += osp.getsize(osp.join(dpath, fname))
+            nfiles += 1
+      elif osp.exists(upload):
+        nbytes += osp.getsize(upload)
+        nfiles += 1
+      else:
+        raise HdfsError('No file found at: %s', upload)
     return cls(nbytes, nfiles)
