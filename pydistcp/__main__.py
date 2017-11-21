@@ -4,7 +4,7 @@
 """pydistcp: A python Web HDFS based tool for inter/intra-cluster data copying.
 
 Usage:
-  pydistcp [-fp] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--part-size=PART_SIZE] [--threads=THREADS] SRC_PATH DEST_PATH
+  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--part-size=PART_SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
   pydistcp (--version | -h)
 
 Options:
@@ -16,11 +16,14 @@ Options:
                                 times (increasing verbosity each time).
   --no-checksum                 Disable checksum check prior to file transfer. This will force
                                 overwrite.
+  --files-only                  Do not create the same directory strecture at the destination and copy
+                                files only under DEST_PATH.
   --silent                      Don't display progress status.
   -f --force                    Allow overwriting any existing files.
   -p --preserve                 Preserve file attributes.
   --threads=THREADS             Number of threads to use for parallelization.
                                 0 allocates a thread per file. [default: 0]
+  --include-pattern=PATTERN     Filter input files based on a pattern.
   --part-size=PART_SIZE         Interval in bytes by which the files will be copied
                                 needs to be a Powers of 2. [default: 65536]     
 
@@ -95,9 +98,11 @@ def main(argv=None):
 
   n_threads = int(args['--threads'])
   part_size = int(args['--part-size'])
+  include_pattern = args['--include-pattern']
   force = args['--force']
   silent = args['--silent']
   checksum = False if args['--no-checksum'] else True
+  files_only = True if args['--files-only'] else False
   src_path = args['SRC_PATH']
   dest_path = args['DEST_PATH']
 
@@ -136,9 +141,12 @@ def main(argv=None):
       dest_path,
       src_path,
       overwrite=force,
+      checksum=checksum,
       chunk_size=part_size,
       n_threads=n_threads,
       progress=progress,
+      include_pattern=include_pattern,
+      files_only=files_only,
       preserve= True if args['--preserve'] else False,
     )    
 
