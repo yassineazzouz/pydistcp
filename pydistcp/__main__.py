@@ -137,19 +137,21 @@ def main(argv=None):
     else:
       progress = None
 
-    client.upload(
-      dest_path,
-      src_path,
-      overwrite=force,
-      checksum=checksum,
-      chunk_size=part_size,
-      n_threads=n_threads,
-      progress=progress,
-      include_pattern=include_pattern,
-      files_only=files_only,
-      preserve= True if args['--preserve'] else False,
-    )    
+    status = client.upload(
+              dest_path,
+              src_path,
+              overwrite=force,
+              checksum=checksum,
+              chunk_size=part_size,
+              n_threads=n_threads,
+              progress=progress,
+              include_pattern=include_pattern,
+              files_only=files_only,
+              preserve= True if args['--preserve'] else False,
+            )
 
+    print "Job Status:"
+    print json.dumps(status, indent=2)
   elif args["--src"] != 'local' and args["--dest"] == 'local':
     client = config.get_client(args["--src"])
     if sys.stderr.isatty() and not silent:
