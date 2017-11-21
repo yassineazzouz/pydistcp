@@ -8,6 +8,7 @@ import os.path as osp
 import os
 import sys
 import glob
+import fnmatch
 
 class _Progress(object):
 
@@ -72,10 +73,33 @@ class _Progress(object):
     return cls(total_content['length'], total_content['fileCount'])
 
   @classmethod
-  def from_local(cls, local_path):
+  def from_local(cls, local_path, include_pattern=None):
     """Instantiate from a local path.
     :param local_path: Local path.
     """
+
+    def _get_file_size(file_path):
+      if include_pattern:
+        if fnmatch.fnmatch( osp.basename(file_path), include_pattern):
+          try:
+            return osp.getsize(file_path)
+          except OSError, err:
+            if 'No such file or directory' in str(err):
+              # The files may have diappeared meanwhile
+              # 0 is a valid file size
+              return -1
+            else:
+              raise err
+      else:
+        try:
+          return osp.getsize(file_path)
+        except OSError, err:
+          if 'No such file or directory' in str(err):
+            # The files may have diappeared meanwhile
+            return -1
+          else:
+            raise err
+
     uploads = [ upload_file for upload_file in glob.iglob(local_path) ]
     if len(uploads) == 0:
       raise HdfsError('Cloud not resolve source path, either it does not exist or can not access it.', local_path)
@@ -86,11 +110,15 @@ class _Progress(object):
       if osp.isdir(upload):
         for dpath, _, fnames in os.walk(upload):
           for fname in fnames:
-            nbytes += osp.getsize(osp.join(dpath, fname))
-            nfiles += 1
+            file_size = _get_file_size(osp.join(dpath, fname))
+            if file_size >= 0:
+                  nbytes += file_size
+                  nfiles += 1
       elif osp.exists(upload):
-        nbytes += osp.getsize(upload)
-        nfiles += 1
+        file_size = _get_file_size(upload)
+        if file_size >= 0:
+          nbytes += file_size
+          nfiles += 1
       else:
         raise HdfsError('No file found at: %s', upload)
     return cls(nbytes, nfiles)

@@ -133,7 +133,7 @@ def main(argv=None):
   elif args["--src"] == 'local' and args["--dest"] != 'local':
     client = config.get_client(args["--dest"])
     if sys.stderr.isatty() and not silent:
-      progress = _Progress.from_local(src_path)
+      progress = _Progress.from_local(src_path, include_pattern=include_pattern)
     else:
       progress = None
 
