@@ -276,6 +276,30 @@ class WebHDFSDistClient(object):
           for fpath in src_fpaths
       ])
 
+    _logger.info("--- scan finished in %s seconds, copying %s files ---" % (time.time() - start_time, len(fpath_tuples)))
+
+    if len(fpath_tuples) == 0:
+      end_time = time.time()
+      _logger.warn("could not find any file to copy.")
+      return {
+        'Source Path'      : src_path,
+        'Destination Path' : dst_path,
+        'Start Time'       : datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S'),
+        'End Time'         : datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S'),
+        'Duration'         : end_time - start_time,
+        'Outcome'          : 'Successful',
+        'Files Expected'   : 0,
+        'Size Expected'    : 0,
+        'Files Copied'     : 0,
+        'Size Copied'      : 0,
+        'Files Failed'     : 0,
+        'Size Failed'      : 0,
+        'Files Deleted'    : 0,
+        'Size Deleted'     : 0,
+        'Files Skipped'    : 0,
+        'Size Skipped'     : 0,
+      }
+
     # Finally, we copy all files (optionally, in parallel).
     if n_threads <= 0:
       n_threads = len(fpath_tuples)
