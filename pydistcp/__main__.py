@@ -4,7 +4,7 @@
 """pydistcp: A python Web HDFS based tool for inter/intra-cluster data copying.
 
 Usage:
-  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--part-size=PART_SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
+  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--conf=CONFIGURATION] [--part-size=PART_SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
   pydistcp (--version | -h)
 
 Options:
@@ -25,7 +25,9 @@ Options:
                                 0 allocates a thread per file. [default: 0]
   --include-pattern=PATTERN     Filter input files based on a pattern.
   --part-size=PART_SIZE         Interval in bytes by which the files will be copied
-                                needs to be a Powers of 2. [default: 65536]     
+                                needs to be a Powers of 2. [default: 65536]
+  --conf=CONFIGURATION          pywhdfs configuration file to use. Defauls to ~/.webhdfs.cfg and could
+                                be set using the environement variable WEBHDFS_CONFIG.
 
 Examples:
   pydistcp -s prod -d preprod -v /tmp/src /tmp/dest
@@ -43,7 +45,7 @@ import requests as rq
 import json
 import sys
 
-def configure(args):
+def configure(args, path=None):
   """Instantiate configuration from arguments dictionary.
 
   :param args: Arguments returned by `docopt`.
@@ -79,7 +81,7 @@ def configure(args):
   stream_handler.setFormatter(lg.Formatter(fmt))
   logger.addHandler(stream_handler)
 
-  config = WebHDFSConfig()
+  config = WebHDFSConfig(path)
 
   # configure file logging if applicable
   handler = config.get_log_handler()
@@ -94,7 +96,8 @@ def main(argv=None):
 
   args = docopt(__doc__, argv=argv, version=__version__)
 
-  config = configure(args)
+  conf_file = args['--conf']
+  config = configure(args, conf_file)
 
   n_threads = int(args['--threads'])
   part_size = int(args['--part-size'])
