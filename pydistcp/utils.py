@@ -73,13 +73,12 @@ class _Progress(object):
     return cls(total_content['length'], total_content['fileCount'])
 
   @classmethod
-  def from_local(cls, local_path, include_pattern=None):
+  def from_local(cls, local_path, include_pattern="*", min_size=0):
     """Instantiate from a local path.
     :param local_path: Local path.
     """
 
     def _get_file_size(file_path):
-      if include_pattern:
         if fnmatch.fnmatch( osp.basename(file_path), include_pattern):
           try:
             return osp.getsize(file_path)
@@ -90,15 +89,6 @@ class _Progress(object):
               return -1
             else:
               raise err
-      else:
-        try:
-          return osp.getsize(file_path)
-        except OSError, err:
-          if 'No such file or directory' in str(err):
-            # The files may have diappeared meanwhile
-            return -1
-          else:
-            raise err
 
     uploads = [ upload_file for upload_file in glob.iglob(local_path) ]
     if len(uploads) == 0:
@@ -111,12 +101,12 @@ class _Progress(object):
         for dpath, _, fnames in os.walk(upload):
           for fname in fnames:
             file_size = _get_file_size(osp.join(dpath, fname))
-            if file_size >= 0:
+            if file_size >= min_size:
                   nbytes += file_size
                   nfiles += 1
       elif osp.exists(upload):
         file_size = _get_file_size(upload)
-        if file_size >= 0:
+        if file_size >= min_size:
           nbytes += file_size
           nfiles += 1
       else:

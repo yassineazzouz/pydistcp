@@ -4,7 +4,7 @@
 """pydistcp: A python Web HDFS based tool for inter/intra-cluster data copying.
 
 Usage:
-  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--conf=CONFIGURATION] [--part-size=PART_SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
+  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--conf=CONFIGURATION] [--part-size=PART_SIZE] [--min-size=SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
   pydistcp (--version | -h)
 
 Options:
@@ -23,7 +23,8 @@ Options:
   -p --preserve                 Preserve file attributes.
   --threads=THREADS             Number of threads to use for parallelization.
                                 0 allocates a thread per file. [default: 0]
-  --include-pattern=PATTERN     Filter input files based on a pattern.
+  --include-pattern=PATTERN     Filter input files based on a pattern. [default: *]
+  --min-size=SIZE               Filter input files based on minimum size. [default: 0]
   --part-size=PART_SIZE         Interval in bytes by which the files will be copied
                                 needs to be a Powers of 2. [default: 65536]
   --conf=CONFIGURATION          pywhdfs configuration file to use. Defauls to ~/.webhdfs.cfg and could
@@ -103,6 +104,7 @@ def main(argv=None):
   n_threads = int(args['--threads'])
   part_size = int(args['--part-size'])
   include_pattern = args['--include-pattern']
+  min_size = args['--min-size']
   force = args['--force']
   silent = args['--silent']
   checksum = False if args['--no-checksum'] else True
@@ -137,7 +139,7 @@ def main(argv=None):
   elif args["--src"] == 'local' and args["--dest"] != 'local':
     client = config.get_client(args["--dest"])
     if sys.stderr.isatty() and not silent:
-      progress = _Progress.from_local(src_path, include_pattern=include_pattern)
+      progress = _Progress.from_local(src_path, include_pattern=include_pattern, min_size=min_size)
     else:
       progress = None
 
@@ -151,6 +153,7 @@ def main(argv=None):
               progress=progress,
               include_pattern=include_pattern,
               files_only=files_only,
+              min_size=min_size,
               preserve= True if args['--preserve'] else False,
             )
 

@@ -163,7 +163,7 @@ class WebHDFSDistClient(object):
           self.dst.write(_tmp_path, wrap(_reader, chunk_size, progress), **kwargs)
 
         if _tmp_path != _dst_path:
-          _logger.debug( 'Copy of %r complete. Moving from %r to %r.', _src_path, _tmp_path, _dst_path )
+          _logger.info( 'Copy of %r complete. Moving from %r to %r.', _src_path, _tmp_path, _dst_path )
           self.dst.delete(_dst_path)
           self.dst.rename(_tmp_path, _dst_path)
         else:
