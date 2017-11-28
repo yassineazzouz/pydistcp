@@ -89,6 +89,8 @@ class _Progress(object):
               return -1
             else:
               raise err
+        else:
+          return -1
 
     uploads = [ upload_file for upload_file in glob.iglob(local_path) ]
     if len(uploads) == 0:
