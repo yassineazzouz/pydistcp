@@ -66,7 +66,8 @@ def configure(args, path=None):
 
   logger = lg.getLogger()
   logger.setLevel(lg.DEBUG)
-  # lg.getLogger('requests_kerberos.kerberos_').setLevel(lg.INFO)
+  lg.getLogger('requests_kerberos.kerberos_').setLevel(lg.CRITICAL)
+  lg.getLogger('requests').setLevel(lg.ERROR)
   # logger.addFilter(AnnoyingErrorsFilter())
 
   levels = {0: lg.CRITICAL, 1: lg.ERROR, 2: lg.WARNING, 3: lg.INFO}
