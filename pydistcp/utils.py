@@ -101,13 +101,13 @@ class _Progress(object):
         for dpath, _, fnames in os.walk(upload):
           for fname in fnames:
             file_size = _get_file_size(osp.join(dpath, fname))
-            if file_size >= min_size:
-                  nbytes += file_size
+            if int(file_size) >= int(min_size):
+                  nbytes += int(file_size)
                   nfiles += 1
       elif osp.exists(upload):
         file_size = _get_file_size(upload)
-        if file_size >= min_size:
-          nbytes += file_size
+        if int(file_size) >= int(min_size):
+          nbytes += int(file_size)
           nfiles += 1
       else:
         raise HdfsError('No file found at: %s', upload)
