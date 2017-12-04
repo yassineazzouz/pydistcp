@@ -35,7 +35,7 @@ class WebHDFSDistClient(object):
     return '<%s(urls=%r),%s(urls=%r)>' % (self.src.__class__.__name__, self.src.host_list, self.dst.__class__.__name__, self.dst.host_list)
 
   def copy(self, src_path, dst_path, overwrite=False, n_threads=1, preserve=False,
-    chunk_size=2 ** 16, checksum=True, progress=None, **kwargs):
+    chunk_size=2 ** 16, buffer_size=2 ** 16, checksum=True, progress=None, **kwargs):
     """Copy a file or directory to HDFS.
 
     :param dst_path: Target HDFS path. If it already exists and is a
@@ -88,22 +88,6 @@ class WebHDFSDistClient(object):
 
     def _copy(_path_tuple):
       """Copy a single file."""
-
-      def wrap(_reader, _chunk_size, _progress):
-        """Generator that can track progress."""
-        nbytes = 0
-        while True:
-          #print "read here %s from %s" % (_chunk_size, _src_path)
-          chunk = _reader.read(_chunk_size)
-          if chunk:
-            if _progress:
-              nbytes += len(chunk)
-              _progress(_src_path, nbytes)
-            yield chunk
-          else:
-            break
-        if _progress:
-          _progress(_src_path, -1)
 
       _src_path, _dst_path = _path_tuple
       _tmp_path = ""
@@ -159,8 +143,8 @@ class WebHDFSDistClient(object):
           kwargs['replication'] = int(srcstats['replication'])
           kwargs['blocksize'] = int(srcstats['blockSize'])
 
-        with self.src.read(_src_path) as _reader:
-          self.dst.write(_tmp_path, wrap(_reader, chunk_size, progress), **kwargs)
+        with self.src.read(_src_path, chunk_size=chunk_size, progress=progress, buffer_size=buffer_size) as _reader:
+          self.dst.write(_tmp_path, _reader, buffersize=buffer_size, **kwargs)
 
         if _tmp_path != _dst_path:
           _logger.info( 'Copy of %r complete. Moving from %r to %r.', _src_path, _tmp_path, _dst_path )

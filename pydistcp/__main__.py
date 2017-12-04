@@ -4,7 +4,7 @@
 """pydistcp: A python Web HDFS based tool for inter/intra-cluster data copying.
 
 Usage:
-  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--conf=CONFIGURATION] [--part-size=PART_SIZE] [--min-size=SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
+  pydistcp [-fp] [--files-only] [--no-checksum] [--silent] (-s CLUSTER -d CLUSTER) [-v...] [--conf=CONFIGURATION] [--part-size=PART_SIZE] [--buffer-size=BUFFER_SIZE] [--min-size=SIZE] [--include-pattern=PATTERN] [--threads=THREADS] SRC_PATH DEST_PATH
   pydistcp (--version | -h)
 
 Options:
@@ -26,6 +26,8 @@ Options:
   --include-pattern=PATTERN     Filter input files based on a pattern. [default: *]
   --min-size=SIZE               Filter input files based on minimum size. [default: 0]
   --part-size=PART_SIZE         Interval in bytes by which the files will be copied
+                                needs to be a Powers of 2. [default: 65536]
+  --buffer-size=BUFFER_SIZE     The buffer size in bytes used for hdfs read and write operations
                                 needs to be a Powers of 2. [default: 65536]
   --conf=CONFIGURATION          pywhdfs configuration file to use. Defauls to ~/.webhdfs.cfg and could
                                 be set using the environement variable WEBHDFS_CONFIG.
@@ -103,6 +105,7 @@ def main(argv=None):
 
   n_threads = int(args['--threads'])
   part_size = int(args['--part-size'])
+  buffer_size = int(args['--buffer-size'])
   include_pattern = args['--include-pattern']
   min_size = int(args['--min-size'])
   force = args['--force']
@@ -128,11 +131,15 @@ def main(argv=None):
               overwrite=force,
               checksum=checksum,
               chunk_size=part_size,
+              buffer_size=buffer_size,
               n_threads=n_threads,
               progress=progress,
               preserve= True if args['--preserve'] else False,
             )
 
+    # Finilize the progress bar before printing the final job status
+    if progress:
+      del(progress)
     print "Job Status:"
     print json.dumps(status, indent=2)
 
@@ -157,6 +164,9 @@ def main(argv=None):
               preserve= True if args['--preserve'] else False,
             )
 
+    # Finilize the progress bar before printing the final job status
+    if progress:
+      del(progress)
     print "Job Status:"
     print json.dumps(status, indent=2)
   elif args["--src"] != 'local' and args["--dest"] == 'local':
